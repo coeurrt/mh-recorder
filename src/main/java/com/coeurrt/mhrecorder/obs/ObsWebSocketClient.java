@@ -32,9 +32,6 @@ public class ObsWebSocketClient extends WebSocketClient {
 
             System.out.println("OBS -> opcode: " + op);
 
-            if (op == 0) {
-                handleHello(inputJson);
-            }
             switch (op) {
                 case 0:
                     handleHello(inputJson);
@@ -48,7 +45,7 @@ public class ObsWebSocketClient extends WebSocketClient {
             e.printStackTrace();
         }
 
-        System.out.println("OBS <- " + message);
+        System.out.println("OBS -> " + message);
     }
 
     @Override
@@ -90,9 +87,8 @@ public class ObsWebSocketClient extends WebSocketClient {
 
             return Base64.getEncoder().encodeToString(authenticationHash);
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new IllegalStateException("Failed to generate OBS authentication", e);
         }
-        return null;
     }
 
     private void sendIdentify(String challenge, String salt, String password) {
