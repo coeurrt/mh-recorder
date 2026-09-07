@@ -1,9 +1,7 @@
 package com.coeurrt.mhrecorder.obs;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
@@ -11,7 +9,6 @@ import org.java_websocket.handshake.ServerHandshake;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.util.Arrays;
 import java.util.Base64;
 
 public class ObsWebSocketClient extends WebSocketClient {
@@ -33,17 +30,25 @@ public class ObsWebSocketClient extends WebSocketClient {
             JsonNode inputJson = objectMapper.readTree(message);
             int op = inputJson.get("op").asInt();
 
-            System.out.println("OBS <- opcode: "+ op );
+            System.out.println("OBS -> opcode: " + op);
 
-            if (op==0){
+            if (op == 0) {
                 handleHello(inputJson);
+            }
+            switch (op) {
+                case 0:
+                    handleHello(inputJson);
+                    break;
+                case 2:
+                    System.out.println("Authenticated to OBS");
+                    break;
             }
 
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        System.out.println("OBS -> " + message);
+        System.out.println("OBS <- " + message);
     }
 
     @Override
@@ -56,11 +61,11 @@ public class ObsWebSocketClient extends WebSocketClient {
         e.printStackTrace();
     }
 
-    private void handleHello(JsonNode  node) {
+    private void handleHello(JsonNode node) {
         JsonNode data = node.get("d");
         JsonNode authentication = data.get("authentication");
 
-        String challenge  = authentication.get("challenge").asText();
+        String challenge = authentication.get("challenge").asText();
         String salt = authentication.get("salt").asText();
         String password = System.getenv("OBS_PASSWORD");
 
@@ -77,11 +82,11 @@ public class ObsWebSocketClient extends WebSocketClient {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
 
-            String secretInput = password+salt;
+            String secretInput = password + salt;
             byte[] secretHash = md.digest(secretInput.getBytes(StandardCharsets.UTF_8));
 
             String authenticationInput = Base64.getEncoder().encodeToString(secretHash) + challenge;
-            byte[] authenticationHash  = md.digest(authenticationInput.getBytes(StandardCharsets.UTF_8));
+            byte[] authenticationHash = md.digest(authenticationInput.getBytes(StandardCharsets.UTF_8));
 
             return Base64.getEncoder().encodeToString(authenticationHash);
         } catch (Exception e) {
@@ -94,13 +99,13 @@ public class ObsWebSocketClient extends WebSocketClient {
 
         ObjectNode rootNode = objectMapper.createObjectNode();
 
-        rootNode.put("op",1);
+        rootNode.put("op", 1);
 
         ObjectNode dataNode = objectMapper.createObjectNode();
-        dataNode.put("rpcVersion",1);
-        dataNode.put("authentication",generateAuthentication(challenge, salt, password));
+        dataNode.put("rpcVersion", 1);
+        dataNode.put("authentication", generateAuthentication(challenge, salt, password));
 
-        rootNode.set("d",dataNode);
+        rootNode.set("d", dataNode);
 
         send(rootNode.toString());
     }
