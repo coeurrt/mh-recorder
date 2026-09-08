@@ -7,14 +7,13 @@ import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.util.Base64;
 
 public class ObsWebSocketClient extends WebSocketClient {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final ObsRequestFactory obsRequestFactory = new ObsRequestFactory();
+    private final ObsHandler obsHandler = new ObsHandler();
+
     public ObsWebSocketClient(URI serverUri) {
         super(serverUri);
     }
@@ -30,15 +29,18 @@ public class ObsWebSocketClient extends WebSocketClient {
             JsonNode inputJson = objectMapper.readTree(message);
             int op = inputJson.get("op").asInt();
 
-            System.out.println("OBS -> opcode: " + op);
-
             switch (op) {
                 case 0:
-                    handleHello(inputJson);
+                    sendRequest(obsHandler.handleHello((inputJson)));
                     break;
                 case 2:
                     System.out.println("Authenticated to OBS");
                     sendRequest(obsRequestFactory.createStartRecordRequest("start-record-id"));
+                    Thread.sleep(5000);
+                    sendRequest(obsRequestFactory.createStopRecordRequest("stop-record-id"));
+                    break;
+                case 7:
+                    obsHandler.handleRequestResponse(inputJson);
                     break;
             }
 
@@ -59,56 +61,8 @@ public class ObsWebSocketClient extends WebSocketClient {
         e.printStackTrace();
     }
 
-    private void handleHello(JsonNode node) {
-        JsonNode data = node.get("d");
-        JsonNode authentication = data.get("authentication");
-
-        String challenge = authentication.get("challenge").asText();
-        String salt = authentication.get("salt").asText();
-        String password = System.getenv("OBS_PASSWORD");
-
-        if (password == null) {
-            throw new IllegalStateException("OBS_PASSWORD is not defined");
-        }
-
-        sendIdentify(challenge, salt, password);
-
-    }
-
-    private String generateAuthentication(String challenge, String salt, String password) {
-
-        try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-
-            String secretInput = password + salt;
-            byte[] secretHash = md.digest(secretInput.getBytes(StandardCharsets.UTF_8));
-
-            String authenticationInput = Base64.getEncoder().encodeToString(secretHash) + challenge;
-            byte[] authenticationHash = md.digest(authenticationInput.getBytes(StandardCharsets.UTF_8));
-
-            return Base64.getEncoder().encodeToString(authenticationHash);
-        } catch (Exception e) {
-            throw new IllegalStateException("Failed to generate OBS authentication", e);
-        }
-    }
-
-    private void sendIdentify(String challenge, String salt, String password) {
-
-        ObjectNode rootNode = objectMapper.createObjectNode();
-
-        rootNode.put("op", 1);
-
-        ObjectNode dataNode = objectMapper.createObjectNode();
-        dataNode.put("rpcVersion", 1);
-        dataNode.put("authentication", generateAuthentication(challenge, salt, password));
-
-        rootNode.set("d", dataNode);
-
-        send(rootNode.toString());
-    }
-
     private void sendRequest(ObjectNode request) {
-            send(request.toString());
-            System.out.println("Client -> OBS request opcode: "+request.get("op").toString());
+        send(request.toString());
+        System.out.println("Client -> OBS request opcode: " + request.get("op").toString());
     }
 }
