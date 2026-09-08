@@ -14,7 +14,7 @@ import java.util.Base64;
 public class ObsWebSocketClient extends WebSocketClient {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-
+    private final ObsRequestFactory obsRequestFactory = new ObsRequestFactory();
     public ObsWebSocketClient(URI serverUri) {
         super(serverUri);
     }
@@ -38,6 +38,7 @@ public class ObsWebSocketClient extends WebSocketClient {
                     break;
                 case 2:
                     System.out.println("Authenticated to OBS");
+                    sendRequest(obsRequestFactory.createStartRecordRequest("start-record-id"));
                     break;
             }
 
@@ -104,5 +105,10 @@ public class ObsWebSocketClient extends WebSocketClient {
         rootNode.set("d", dataNode);
 
         send(rootNode.toString());
+    }
+
+    private void sendRequest(ObjectNode request) {
+            send(request.toString());
+            System.out.println("Client -> OBS request opcode: "+request.get("op").toString());
     }
 }
