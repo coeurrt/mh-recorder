@@ -18,6 +18,10 @@ public class ObsWebSocketClient extends WebSocketClient {
         super(serverUri);
     }
 
+    public ObsHandler getObsHandler() {
+        return obsHandler;
+    }
+
     @Override
     public void onOpen(ServerHandshake serverHandshake) {
         System.out.println("Connected to OBS");
@@ -35,6 +39,9 @@ public class ObsWebSocketClient extends WebSocketClient {
                     break;
                 case 2:
                     System.out.println("Authenticated to OBS");
+                    break;
+                case 5:
+                    obsHandler.handleEvent(inputJson);
                     break;
                 case 7:
                     obsHandler.handleRequestResponse(inputJson);

@@ -5,8 +5,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ObsRequestFactory {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
     private static final int REQUEST_OPCODE = 6;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public ObjectNode createStartRecordRequest(String requestId) {
         ObjectNode request = objectMapper.createObjectNode();

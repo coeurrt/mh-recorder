@@ -7,10 +7,12 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Base64;
+import java.util.function.Consumer;
 
 public class ObsHandler {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private Consumer<String> statusCallback;
 
     public ObjectNode handleHello(JsonNode node) {
         JsonNode data = node.get("d");
@@ -39,13 +41,28 @@ public class ObsHandler {
     }
 
     public void handleRequestResponse(JsonNode node) {
-        if (node.get("d").get("requestStatus").get("result").asBoolean()) {
-            String requestType = node.get("d").get("requestType").asText();
+        JsonNode data = node.get("d");
+        if (data.get("requestStatus").get("result").asBoolean()) {
+            String requestType = data.get("requestType").asText();
             switch (requestType) {
                 case "StopRecord":
-                    System.out.println("Output Path: " + node.get("d").get("responseData").get("outputPath").asText());
+                    System.out.println("Output Path: " + data.get("responseData").get("outputPath").asText());
             }
         } else System.out.println("Request failed");
+    }
+
+    public void handleEvent(JsonNode node) {
+        JsonNode data = node.get("d");
+
+        String eventType = data.get("eventType").asText();
+
+        if ("RecordStateChanged".equals(eventType) && statusCallback != null) {
+            boolean active = data.get("eventData").get("outputActive").asBoolean();
+
+            statusCallback.accept(active ? "Recording" : "Stopped");
+        }
+        System.out.println("handleEvent called");
+        System.out.println("callback = " + statusCallback);
     }
 
     private String generateAuthentication(String challenge, String salt, String password) {
@@ -63,5 +80,9 @@ public class ObsHandler {
         } catch (Exception e) {
             throw new IllegalStateException("Failed to generate OBS authentication", e);
         }
+    }
+
+    public void setStatusCallback(Consumer<String> callback) {
+        this.statusCallback = callback;
     }
 }
