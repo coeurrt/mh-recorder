@@ -35,9 +35,6 @@ public class ObsWebSocketClient extends WebSocketClient {
                     break;
                 case 2:
                     System.out.println("Authenticated to OBS");
-                    sendRequest(obsRequestFactory.createStartRecordRequest("start-record-id"));
-                    Thread.sleep(5000);
-                    sendRequest(obsRequestFactory.createStopRecordRequest("stop-record-id"));
                     break;
                 case 7:
                     obsHandler.handleRequestResponse(inputJson);
@@ -64,5 +61,13 @@ public class ObsWebSocketClient extends WebSocketClient {
     private void sendRequest(ObjectNode request) {
         send(request.toString());
         System.out.println("Client -> OBS request opcode: " + request.get("op").toString());
+    }
+
+    public void startRecording() {
+        sendRequest(obsRequestFactory.createStartRecordRequest("start-record-id"));
+    }
+
+    public void stopRecording() {
+        sendRequest(obsRequestFactory.createStopRecordRequest("stop-record-id"));
     }
 }
