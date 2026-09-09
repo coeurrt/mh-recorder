@@ -1,5 +1,6 @@
 package com.coeurrt.mhrecorder.obs;
 
+import com.coeurrt.mhrecorder.video.VideoFileManager;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -13,6 +14,7 @@ import java.util.function.Consumer;
 public class ObsHandler {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final VideoFileManager videoFileManager = new VideoFileManager();
     private Consumer<Boolean> statusCallback;
     private Consumer<Path> pathCallback;
 
@@ -48,7 +50,8 @@ public class ObsHandler {
             String requestType = data.get("requestType").asText();
             switch (requestType) {
                 case "StopRecord":
-                    pathCallback.accept(Path.of(data.get("responseData").get("outputPath").asText()));
+                    Path path = Path.of(data.get("responseData").get("outputPath").asText());
+                    pathCallback.accept(path);
                     break;
                 case "GetRecordStatus":
                     statusCallback.accept(data.get("responseData").get("outputActive").asBoolean());
@@ -65,6 +68,10 @@ public class ObsHandler {
             boolean active = data.get("eventData").get("outputActive").asBoolean();
 
             statusCallback.accept(active);
+        }
+        if ("RecordStateChanged".equals(eventType)
+                && "OBS_WEBSOCKET_OUTPUT_STOPPED".equals(data.get("eventData").get("outputState").asText())) {
+            videoFileManager.moveToRecorderFolder(Path.of(data.get("eventData").get("outputPath").asText()));
         }
     }
 
