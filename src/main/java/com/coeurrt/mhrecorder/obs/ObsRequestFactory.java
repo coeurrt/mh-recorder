@@ -31,4 +31,16 @@ public class ObsRequestFactory {
         request.set("d", dataNode);
         return request;
     }
+
+    public ObjectNode createGetRecordStatusRequest(String requestId) {
+        ObjectNode request = objectMapper.createObjectNode();
+        request.put("op", REQUEST_OPCODE);
+
+        ObjectNode dataNode = objectMapper.createObjectNode();
+        dataNode.put("requestType", "GetRecordStatus");
+        dataNode.put("requestId", requestId);
+
+        request.set("d", dataNode);
+        return request;
+    }
 }

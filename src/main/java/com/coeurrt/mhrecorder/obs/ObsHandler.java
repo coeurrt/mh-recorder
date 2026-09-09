@@ -47,6 +47,9 @@ public class ObsHandler {
             switch (requestType) {
                 case "StopRecord":
                     System.out.println("Output Path: " + data.get("responseData").get("outputPath").asText());
+                    break;
+                case "GetRecordStatus":
+                    statusCallback.accept(data.get("responseData").get("outputActive").asBoolean() ? "Recording" : "Stopped");
             }
         } else System.out.println("Request failed");
     }

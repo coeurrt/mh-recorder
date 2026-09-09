@@ -7,19 +7,25 @@ import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 
 import java.net.URI;
+import java.util.function.Consumer;
 
 public class ObsWebSocketClient extends WebSocketClient {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final ObsRequestFactory obsRequestFactory = new ObsRequestFactory();
     private final ObsHandler obsHandler = new ObsHandler();
+    private Consumer<Boolean> connectionCallback;
 
     public ObsWebSocketClient(URI serverUri) {
         super(serverUri);
     }
 
-    public ObsHandler getObsHandler() {
-        return obsHandler;
+    public void setRecordingStatusCallback(Consumer<String> callback) {
+        obsHandler.setStatusCallback(callback);
+    }
+
+    public void setConnectionCallback(Consumer<Boolean> connectionCallback) {
+        this.connectionCallback = connectionCallback;
     }
 
     @Override
@@ -39,6 +45,8 @@ public class ObsWebSocketClient extends WebSocketClient {
                     break;
                 case 2:
                     System.out.println("Authenticated to OBS");
+                    connectionCallback.accept(true);
+                    sendRequest(obsRequestFactory.createGetRecordStatusRequest("get-record-status-on-connection"));
                     break;
                 case 5:
                     obsHandler.handleEvent(inputJson);
@@ -58,6 +66,7 @@ public class ObsWebSocketClient extends WebSocketClient {
     @Override
     public void onClose(int code, String reason, boolean remote) {
         System.out.println("Disconnected from OBS");
+        connectionCallback.accept(false);
     }
 
     @Override

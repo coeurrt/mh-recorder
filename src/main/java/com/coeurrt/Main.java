@@ -13,8 +13,6 @@ public class Main {
 
         ObsWebSocketClient client = new ObsWebSocketClient(obsUri);
 
-        client.connectBlocking();
-
         MhRecorderApplication.setObsClient(client);
 
         Application.launch(MhRecorderApplication.class, args);
