@@ -12,7 +12,7 @@ import java.util.function.Consumer;
 public class ObsHandler {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private Consumer<String> statusCallback;
+    private Consumer<Boolean> statusCallback;
 
     public ObjectNode handleHello(JsonNode node) {
         JsonNode data = node.get("d");
@@ -49,7 +49,7 @@ public class ObsHandler {
                     System.out.println("Output Path: " + data.get("responseData").get("outputPath").asText());
                     break;
                 case "GetRecordStatus":
-                    statusCallback.accept(data.get("responseData").get("outputActive").asBoolean() ? "Recording" : "Stopped");
+                    statusCallback.accept(data.get("responseData").get("outputActive").asBoolean());
             }
         } else System.out.println("Request failed");
     }
@@ -62,7 +62,7 @@ public class ObsHandler {
         if ("RecordStateChanged".equals(eventType) && statusCallback != null) {
             boolean active = data.get("eventData").get("outputActive").asBoolean();
 
-            statusCallback.accept(active ? "Recording" : "Stopped");
+            statusCallback.accept(active);
         }
         System.out.println("handleEvent called");
         System.out.println("callback = " + statusCallback);
@@ -85,7 +85,7 @@ public class ObsHandler {
         }
     }
 
-    public void setStatusCallback(Consumer<String> callback) {
+    public void setStatusCallback(Consumer<Boolean> callback) {
         this.statusCallback = callback;
     }
 }

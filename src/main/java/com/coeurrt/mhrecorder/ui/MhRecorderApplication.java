@@ -44,7 +44,9 @@ public class MhRecorderApplication extends Application {
         root.getChildren().add(statusLabel);
         obsClient.setRecordingStatusCallback(recording -> {
             Platform.runLater(() -> {
-                statusLabel.setText("Recording: " + recording);
+                statusLabel.setText("Recording: " + (recording ? "Recording" : "Stopped"));
+                startRecordButton.setDisable(recording);
+                stopRecordButton.setDisable(!recording);
             });
         });
 

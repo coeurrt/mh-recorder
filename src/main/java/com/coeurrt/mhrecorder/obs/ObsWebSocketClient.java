@@ -20,7 +20,7 @@ public class ObsWebSocketClient extends WebSocketClient {
         super(serverUri);
     }
 
-    public void setRecordingStatusCallback(Consumer<String> callback) {
+    public void setRecordingStatusCallback(Consumer<Boolean> callback) {
         obsHandler.setStatusCallback(callback);
     }
 
