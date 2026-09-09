@@ -50,6 +50,14 @@ public class MhRecorderApplication extends Application {
             });
         });
 
+        Label pathLabel = new Label("Last record path: Unknown");
+        root.getChildren().add(pathLabel);
+        obsClient.setPathCallback(path -> {
+            Platform.runLater(() -> {
+                pathLabel.setText("Last record path: " + path.toString());
+            });
+        });
+
         startRecordButton.setOnAction(event -> {
             obsClient.startRecording();
         });

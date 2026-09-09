@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.util.Base64;
 import java.util.function.Consumer;
@@ -13,6 +14,7 @@ public class ObsHandler {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private Consumer<Boolean> statusCallback;
+    private Consumer<Path> pathCallback;
 
     public ObjectNode handleHello(JsonNode node) {
         JsonNode data = node.get("d");
@@ -46,7 +48,7 @@ public class ObsHandler {
             String requestType = data.get("requestType").asText();
             switch (requestType) {
                 case "StopRecord":
-                    System.out.println("Output Path: " + data.get("responseData").get("outputPath").asText());
+                    pathCallback.accept(Path.of(data.get("responseData").get("outputPath").asText()));
                     break;
                 case "GetRecordStatus":
                     statusCallback.accept(data.get("responseData").get("outputActive").asBoolean());
@@ -64,8 +66,6 @@ public class ObsHandler {
 
             statusCallback.accept(active);
         }
-        System.out.println("handleEvent called");
-        System.out.println("callback = " + statusCallback);
     }
 
     private String generateAuthentication(String challenge, String salt, String password) {
@@ -87,5 +87,9 @@ public class ObsHandler {
 
     public void setStatusCallback(Consumer<Boolean> callback) {
         this.statusCallback = callback;
+    }
+
+    public void setPathCallback(Consumer<Path> pathCallback) {
+        this.pathCallback = pathCallback;
     }
 }

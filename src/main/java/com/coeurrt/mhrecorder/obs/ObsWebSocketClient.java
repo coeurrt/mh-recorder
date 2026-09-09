@@ -7,6 +7,7 @@ import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 
 import java.net.URI;
+import java.nio.file.Path;
 import java.util.function.Consumer;
 
 public class ObsWebSocketClient extends WebSocketClient {
@@ -22,6 +23,10 @@ public class ObsWebSocketClient extends WebSocketClient {
 
     public void setRecordingStatusCallback(Consumer<Boolean> callback) {
         obsHandler.setStatusCallback(callback);
+    }
+
+    public void setPathCallback(Consumer<Path> callback) {
+        obsHandler.setPathCallback(callback);
     }
 
     public void setConnectionCallback(Consumer<Boolean> connectionCallback) {
