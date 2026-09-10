@@ -20,9 +20,11 @@ public class Main {
 //        Application.launch(MhRecorderApplication.class, args);
 
         QuestStartDetection q = new QuestStartDetection();
-        for (int i = 1; i <= 5; i++) {
-            System.out.println(i);
-            System.out.println(q.detect(Path.of("C:\\Users\\Mimi\\Documents\\dev\\screen"+i+".png")));
+
+        while (true) {
+            if(q.detect())
+                System.out.println("QUEST STARTED");
+            Thread.sleep(500);
         }
 
     }
