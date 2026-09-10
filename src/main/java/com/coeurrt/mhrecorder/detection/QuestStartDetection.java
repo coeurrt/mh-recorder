@@ -1,50 +1,80 @@
 package com.coeurrt.mhrecorder.detection;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.time.LocalDateTime;
 
 public class QuestStartDetection {
 
     private final static double X_START_PERCENT = 0.42;
     private final static double X_END_PERCENT = 0.58;
-    private final static double Y_START_PERCENT = 0.05;
+    private final static double Y_START_PERCENT = 0.1;
     private final static double Y_END_PERCENT = 0.32;
-    private static final double DETECTION_THRESHOLD = 0.15;
+    private static final double MIN_HUE = 0.47;
+    private static final double MAX_HUE = 0.53;
+    private static final double MIN_SATURATION = 0.7;
+    private static final double MIN_BRIGHTNESS = 0.7;
+    private static final double DETECTION_THRESHOLD = 0.03;
+    private static final int CONSECUTIVE_DETECTION_THRESHOLD = 5;
+    private final Robot robot;
+    private int consecutiveDetections = 0;
 
-    public boolean detect(Path imagePath) {
+    public QuestStartDetection() throws AWTException {
+        this.robot = new Robot();
+    }
 
-        //TODO POC test
-        Path writePath = imagePath.getParent().resolve("test.png");
+    public boolean detect() {
 
-        try {
-            BufferedImage image = ImageIO.read(imagePath.toFile());
-            int width = image.getWidth();
-            int height = image.getHeight();
-            int xStart = (int) (width * X_START_PERCENT);
-            int xEnd = (int) (width * X_END_PERCENT);
-            int yStart = (int) (height * Y_START_PERCENT);
-            int yEnd = (int) (height * Y_END_PERCENT);
+        int width = Toolkit.getDefaultToolkit().getScreenSize().width;
+        int height = Toolkit.getDefaultToolkit().getScreenSize().height;
+        int xStart = (int) (width * X_START_PERCENT);
+        int xEnd = (int) (width * X_END_PERCENT);
+        int yStart = (int) (height * Y_START_PERCENT);
+        int yEnd = (int) (height * Y_END_PERCENT);
 
-            BufferedImage roiImage = image.getSubimage(xStart, yStart, xEnd - xStart, yEnd - yStart);
-            ImageIO.write(roiImage, "png", writePath.toFile());
+        BufferedImage roiImage = robot.createScreenCapture(new Rectangle(xStart, yStart, xEnd - xStart, yEnd - yStart));
 
-            int cyanPixelCounter = 0;
+        double cyanRatio = calculateCyanRatio(roiImage);
 
-            for (int y = 0; y < roiImage.getHeight(); y++) {
-                for (int x = 0; x < roiImage.getWidth(); x++) {
-                    int rgb = roiImage.getRGB(x, y);
-                    float[] hsb = Color.RGBtoHSB((rgb >> 16) & 0xFF, (rgb >> 8) & 0xFF, rgb & 0xFF, null);
-                    if (hsb[0] > 0.47 && hsb[0] < 0.53 && hsb[2] > 0.70)
-                        cyanPixelCounter++;
-                }
+        log(cyanRatio);
+
+        if (cyanRatio > DETECTION_THRESHOLD) {
+            consecutiveDetections++;
+        } else {
+            consecutiveDetections = 0;
+        }
+
+        return consecutiveDetections == CONSECUTIVE_DETECTION_THRESHOLD;
+
+    }
+
+    private double calculateCyanRatio(BufferedImage roiImage) {
+        int cyanPixelCounter = 0;
+
+        for (int y = 0; y < roiImage.getHeight(); y++) {
+            for (int x = 0; x < roiImage.getWidth(); x++) {
+                int rgb = roiImage.getRGB(x, y);
+                float[] hsb = Color.RGBtoHSB((rgb >> 16) & 0xFF, (rgb >> 8) & 0xFF, rgb & 0xFF, null);
+                if (hsb[0] > MIN_HUE
+                        && hsb[0] < MAX_HUE && hsb[1] > MIN_SATURATION
+                        && hsb[2] > MIN_BRIGHTNESS) cyanPixelCounter++;
             }
+        }
 
-            double cyanRatio = (double) cyanPixelCounter / (roiImage.getWidth()* roiImage.getHeight());
-            return (cyanRatio > DETECTION_THRESHOLD);
+        return (double) cyanPixelCounter / (roiImage.getWidth() * roiImage.getHeight());
+    }
 
+    //TODO POC DELETE AFTER
+    private void log(double ratio) {
+        Path logPath = Path.of("C:\\Users\\Mimi\\Documents\\dev\\quest-detection.log");
+
+        String logLine = LocalDateTime.now() + " | ratio=" + ratio + " | above threshold=" + (ratio > DETECTION_THRESHOLD) + System.lineSeparator();
+        try {
+            Files.writeString(logPath, logLine, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
