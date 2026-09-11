@@ -43,4 +43,24 @@ public class ObsRequestFactory {
         request.set("d", dataNode);
         return request;
     }
+
+    public ObjectNode createGetSourceScreenshot(String requestId) {
+        ObjectNode request = objectMapper.createObjectNode();
+        request.put("op", REQUEST_OPCODE);
+
+        ObjectNode dataNode = objectMapper.createObjectNode();
+        dataNode.put("requestType", "GetSourceScreenshot");
+        dataNode.put("requestId", requestId);
+
+
+        ObjectNode requestData = objectMapper.createObjectNode();
+        requestData.put("sourceName", "MHRecorder");
+        requestData.put("imageFormat", "png");
+        requestData.put("imageWidth", 800);
+        requestData.put("imageHeight", 450);
+        dataNode.set("requestData", requestData);
+
+        request.set("d", dataNode);
+        return request;
+    }
 }

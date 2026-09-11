@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 
+import java.awt.image.BufferedImage;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.function.Consumer;
@@ -33,6 +34,10 @@ public class ObsWebSocketClient extends WebSocketClient {
         this.connectionCallback = connectionCallback;
     }
 
+    public void setScreenshotCallback(Consumer<BufferedImage> screenshotCallback) {
+        obsHandler.setScreenshotCallback(screenshotCallback);
+    }
+
     @Override
     public void onOpen(ServerHandshake serverHandshake) {
         System.out.println("Connected to OBS");
@@ -43,7 +48,7 @@ public class ObsWebSocketClient extends WebSocketClient {
         try {
             JsonNode inputJson = objectMapper.readTree(message);
             int op = inputJson.get("op").asInt();
-
+            //System.out.println("OBS -> " + message);
             switch (op) {
                 case 0:
                     sendRequest(obsHandler.handleHello((inputJson)));
@@ -60,12 +65,9 @@ public class ObsWebSocketClient extends WebSocketClient {
                     obsHandler.handleRequestResponse(inputJson);
                     break;
             }
-
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-        System.out.println("OBS -> " + message);
     }
 
     @Override
@@ -90,5 +92,9 @@ public class ObsWebSocketClient extends WebSocketClient {
 
     public void stopRecording() {
         sendRequest(obsRequestFactory.createStopRecordRequest("stop-record-id"));
+    }
+
+    public void getScreenshot() {
+        sendRequest(obsRequestFactory.createGetSourceScreenshot("get-screenshot"));
     }
 }

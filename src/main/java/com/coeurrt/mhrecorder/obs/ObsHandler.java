@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import java.awt.image.BufferedImage;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.security.MessageDigest;
@@ -17,6 +18,8 @@ public class ObsHandler {
     private final VideoFileManager videoFileManager = new VideoFileManager();
     private Consumer<Boolean> statusCallback;
     private Consumer<Path> pathCallback;
+    private Consumer<BufferedImage> screenshotCallback;
+    private final ObsGameCapture obsGameCapture = new ObsGameCapture();
 
     public ObjectNode handleHello(JsonNode node) {
         JsonNode data = node.get("d");
@@ -49,6 +52,12 @@ public class ObsHandler {
         if (data.get("requestStatus").get("result").asBoolean()) {
             String requestType = data.get("requestType").asText();
             switch (requestType) {
+                case "GetSourceScreenshot":
+                    if (screenshotCallback != null) {
+                        screenshotCallback.accept(
+                                obsGameCapture.decodeRequestToBufferedImage(data.get("responseData").get("imageData").asText()));
+                    }
+                    break;
                 case "StopRecord":
                     Path path = Path.of(data.get("responseData").get("outputPath").asText());
                     pathCallback.accept(path);
@@ -98,5 +107,9 @@ public class ObsHandler {
 
     public void setPathCallback(Consumer<Path> pathCallback) {
         this.pathCallback = pathCallback;
+    }
+
+    public void setScreenshotCallback(Consumer<BufferedImage> screenshotCallback) {
+        this.screenshotCallback = screenshotCallback;
     }
 }
