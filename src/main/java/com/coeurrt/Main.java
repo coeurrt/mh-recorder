@@ -1,26 +1,42 @@
 package com.coeurrt;
 
 import com.coeurrt.mhrecorder.detection.QuestStartDetection;
-import com.coeurrt.mhrecorder.detection.WindowsGameLocator;
+import com.coeurrt.mhrecorder.obs.ObsWebSocketClient;
+import com.coeurrt.mhrecorder.ui.MhRecorderApplication;
+import javafx.application.Application;
+
+import java.net.URI;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class Main {
 
     public static void main(String[] args) throws Exception {
-//        URI obsUri = new URI("ws://localhost:4455");
-//
-//        ObsWebSocketClient client = new ObsWebSocketClient(obsUri);
-//
-//        MhRecorderApplication.setObsClient(client);
-//
-//        Application.launch(MhRecorderApplication.class, args);
+        URI obsUri = new URI("ws://localhost:4455");
 
-        QuestStartDetection q = new QuestStartDetection();
+        ObsWebSocketClient client = new ObsWebSocketClient(obsUri);
 
-        while (true) {
-            if(q.detect())
+        MhRecorderApplication.setObsClient(client);
+
+        QuestStartDetection questStartDetection = new QuestStartDetection();
+
+        client.setScreenshotCallback(image -> {
+            if (questStartDetection.detect(image)) {
                 System.out.println("QUEST STARTED");
-            Thread.sleep(500);
-        }
+            }
+        });
 
+        ScheduledExecutorService scheduler =
+                Executors.newSingleThreadScheduledExecutor();
+
+        scheduler.scheduleAtFixedRate(
+                client::getScreenshot,
+                2000,
+                500,
+                TimeUnit.MILLISECONDS
+        );
+
+        Application.launch(MhRecorderApplication.class, args);
     }
 }

@@ -20,18 +20,11 @@ public class QuestStartDetection {
     private static final double MIN_BRIGHTNESS = 0.7;
     private static final double DETECTION_THRESHOLD = 0.03;
     private static final int CONSECUTIVE_DETECTION_THRESHOLD = 5;
-    private final Robot robot;
-    private final WindowsGameLocator windowsGameLocator;
     private int consecutiveDetections = 0;
 
-    public QuestStartDetection() throws AWTException {
-        this.windowsGameLocator = new WindowsGameLocator();
-        this.robot = new Robot();
-    }
+    public boolean detect(BufferedImage image) {
 
-    public boolean detect() {
-
-        BufferedImage roiImage = robot.createScreenCapture(calculateRoiBounds(windowsGameLocator.getGameWindowBounds()));
+        BufferedImage roiImage = createRoiImage(image);
 
         double cyanRatio = calculateCyanRatio(roiImage);
 
@@ -42,7 +35,6 @@ public class QuestStartDetection {
         } else {
             consecutiveDetections = 0;
         }
-
         return consecutiveDetections == CONSECUTIVE_DETECTION_THRESHOLD;
 
     }
@@ -75,11 +67,11 @@ public class QuestStartDetection {
         }
     }
 
-    private Rectangle calculateRoiBounds(Rectangle rect) {
-        int xStart = (int) (rect.x + rect.width * X_START_PERCENT);
-        int xEnd = (int) (rect.x + rect.width * X_END_PERCENT);
-        int yStart = (int) (rect.y + rect.height * Y_START_PERCENT);
-        int yEnd = (int) (rect.y + rect.height * Y_END_PERCENT);
-        return new Rectangle(xStart, yStart, xEnd - xStart, yEnd - yStart);
+    private BufferedImage createRoiImage(BufferedImage image) {
+        int xStart = (int) (image.getWidth() * X_START_PERCENT);
+        int xEnd = (int) (image.getWidth() * X_END_PERCENT);
+        int yStart = (int) (image.getHeight() * Y_START_PERCENT);
+        int yEnd = (int) (image.getHeight() * Y_END_PERCENT);
+        return image.getSubimage(xStart, yStart, xEnd - xStart, yEnd - yStart);
     }
 }
