@@ -1,12 +1,7 @@
 package com.coeurrt;
 
 import com.coeurrt.mhrecorder.detection.QuestStartDetection;
-import com.coeurrt.mhrecorder.obs.ObsWebSocketClient;
-import com.coeurrt.mhrecorder.ui.MhRecorderApplication;
-import javafx.application.Application;
-
-import java.net.URI;
-import java.nio.file.Path;
+import com.coeurrt.mhrecorder.detection.WindowsGameLocator;
 
 public class Main {
 
