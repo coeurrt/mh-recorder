@@ -21,22 +21,17 @@ public class QuestStartDetection {
     private static final double DETECTION_THRESHOLD = 0.03;
     private static final int CONSECUTIVE_DETECTION_THRESHOLD = 5;
     private final Robot robot;
+    private final WindowsGameLocator windowsGameLocator;
     private int consecutiveDetections = 0;
 
     public QuestStartDetection() throws AWTException {
+        this.windowsGameLocator = new WindowsGameLocator();
         this.robot = new Robot();
     }
 
     public boolean detect() {
 
-        int width = Toolkit.getDefaultToolkit().getScreenSize().width;
-        int height = Toolkit.getDefaultToolkit().getScreenSize().height;
-        int xStart = (int) (width * X_START_PERCENT);
-        int xEnd = (int) (width * X_END_PERCENT);
-        int yStart = (int) (height * Y_START_PERCENT);
-        int yEnd = (int) (height * Y_END_PERCENT);
-
-        BufferedImage roiImage = robot.createScreenCapture(new Rectangle(xStart, yStart, xEnd - xStart, yEnd - yStart));
+        BufferedImage roiImage = robot.createScreenCapture(calculateRoiBounds(windowsGameLocator.getGameWindowBounds()));
 
         double cyanRatio = calculateCyanRatio(roiImage);
 
@@ -78,5 +73,13 @@ public class QuestStartDetection {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private Rectangle calculateRoiBounds(Rectangle rect) {
+        int xStart = (int) (rect.x + rect.width * X_START_PERCENT);
+        int xEnd = (int) (rect.x + rect.width * X_END_PERCENT);
+        int yStart = (int) (rect.y + rect.height * Y_START_PERCENT);
+        int yEnd = (int) (rect.y + rect.height * Y_END_PERCENT);
+        return new Rectangle(xStart, yStart, xEnd - xStart, yEnd - yStart);
     }
 }
