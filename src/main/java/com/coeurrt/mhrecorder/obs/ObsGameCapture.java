@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.Base64;
 
 public class ObsGameCapture {
+
     public BufferedImage decodeRequestToBufferedImage(String imageData) {
         imageData = imageData.substring(imageData.indexOf(',') + 1);
         byte[] imageBytes = Base64.getDecoder().decode(imageData);
@@ -17,4 +18,5 @@ public class ObsGameCapture {
             throw new RuntimeException(e);
         }
     }
+
 }

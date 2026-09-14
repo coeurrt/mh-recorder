@@ -7,6 +7,7 @@ import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 
 import java.awt.image.BufferedImage;
+import java.net.ConnectException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.concurrent.Executors;
@@ -16,11 +17,12 @@ import java.util.function.Consumer;
 
 public class ObsWebSocketClient extends WebSocketClient {
 
+    private static final int SCREENSHOT_INTERVAL = 500;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final ObsRequestFactory obsRequestFactory = new ObsRequestFactory();
     private final ObsHandler obsHandler = new ObsHandler();
     private Consumer<Boolean> connectionCallback;
-    private ScheduledExecutorService scheduler;
+    private ScheduledExecutorService screenshotScheduler;
 
     public ObsWebSocketClient(URI serverUri) {
         super(serverUri);
@@ -77,14 +79,18 @@ public class ObsWebSocketClient extends WebSocketClient {
 
     @Override
     public void onClose(int code, String reason, boolean remote) {
-        System.out.println("Disconnected from OBS");
+        System.out.println("OBS connection attempt failed");
         stopScreenshotScheduler();
         connectionCallback.accept(false);
     }
 
     @Override
     public void onError(Exception e) {
-        e.printStackTrace();
+        if (e instanceof ConnectException){
+            System.out.println("Failed to connect to OBS");
+        } else {
+            e.printStackTrace();
+        }
     }
 
     private void sendRequest(ObjectNode request) {
@@ -93,20 +99,20 @@ public class ObsWebSocketClient extends WebSocketClient {
     }
 
     private void stopScreenshotScheduler() {
-        if (scheduler != null && !scheduler.isShutdown()) {
-            scheduler.shutdownNow();
-            scheduler = null;
+        if (screenshotScheduler != null && !screenshotScheduler.isShutdown()) {
+            screenshotScheduler.shutdownNow();
+            screenshotScheduler = null;
         }
     }
 
     private void startScreenshotScheduler() {
-        if (scheduler == null || scheduler.isShutdown()) {
-            scheduler = Executors.newSingleThreadScheduledExecutor();
+        if (screenshotScheduler == null || screenshotScheduler.isShutdown()) {
+            screenshotScheduler = Executors.newSingleThreadScheduledExecutor();
 
-            scheduler.scheduleAtFixedRate(
+            screenshotScheduler.scheduleAtFixedRate(
                     this::getScreenshot,
                     0,
-                    500,
+                    SCREENSHOT_INTERVAL,
                     TimeUnit.MILLISECONDS
             );
         }

@@ -1,6 +1,6 @@
 package com.coeurrt.mhrecorder.ui;
 
-import com.coeurrt.mhrecorder.obs.ObsWebSocketClient;
+import com.coeurrt.mhrecorder.obs.ObsConnectionManager;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Scene;
@@ -11,10 +11,12 @@ import javafx.stage.Stage;
 
 public class MhRecorderApplication extends Application {
 
-    private static ObsWebSocketClient obsClient;
+    private static ObsConnectionManager obsConnectionManager;
+    private boolean isConnected = false;
+    private boolean isRecording = false;
 
-    public static void setObsClient(ObsWebSocketClient client) {
-        obsClient = client;
+    public static void setObsConnectionManager(ObsConnectionManager obsConnectionManager) {
+        MhRecorderApplication.obsConnectionManager = obsConnectionManager;
     }
 
     @Override
@@ -32,51 +34,66 @@ public class MhRecorderApplication extends Application {
 
         Label connectionLabel = new Label("Connection: Disconnected");
         root.getChildren().add(connectionLabel);
-        obsClient.setConnectionCallback(connected -> {
+        obsConnectionManager.setConnectionCallback(connected -> {
             Platform.runLater(() -> {
-                connectionLabel.setText("Connection: " + (connected ? "Connected" : "Disconnected"));
+                isConnected = connected;
+
+                connectionLabel.setText(
+                        "Connection: " + (connected ? "Connected" : "Disconnected")
+                );
+
+                updateButtons(startRecordButton, stopRecordButton);
             });
-            startRecordButton.setDisable(!connected);
-            stopRecordButton.setDisable(!connected);
         });
 
         Label statusLabel = new Label("Recording: Unknown");
         root.getChildren().add(statusLabel);
-        obsClient.setRecordingStatusCallback(recording -> {
+        obsConnectionManager.setRecordingStatusCallback(recording -> {
             Platform.runLater(() -> {
-                statusLabel.setText("Recording: " + (recording ? "Recording" : "Stopped"));
-                startRecordButton.setDisable(recording);
-                stopRecordButton.setDisable(!recording);
+                isRecording = recording;
+
+                statusLabel.setText(
+                        "Recording: " + (recording ? "Recording" : "Stopped")
+                );
+
+                updateButtons(startRecordButton, stopRecordButton);
             });
         });
 
         Label pathLabel = new Label("Last record path: Unknown");
         root.getChildren().add(pathLabel);
-        obsClient.setPathCallback(path -> {
+        obsConnectionManager.setPathCallback(path -> {
             Platform.runLater(() -> {
                 pathLabel.setText("Last record path: " + path.toString());
             });
         });
 
         startRecordButton.setOnAction(event -> {
-            obsClient.startRecording();
+            obsConnectionManager.startRecording();
         });
 
         stopRecordButton.setOnAction(event -> {
-            obsClient.stopRecording();
+            obsConnectionManager.stopRecording();
         });
 
         stage.setTitle("MH Recorder");
         stage.setScene(scene);
         stage.show();
-
-        obsClient.connect();
     }
 
     @Override
     public void stop() {
-        if (obsClient != null && obsClient.isOpen()) {
-            obsClient.close();
+        obsConnectionManager.shutdown();
+    }
+
+    private void updateButtons(Button startRecordButton, Button stopRecordButton) {
+        if (!isConnected) {
+            startRecordButton.setDisable(true);
+            stopRecordButton.setDisable(true);
+            return;
         }
+
+        startRecordButton.setDisable(isRecording);
+        stopRecordButton.setDisable(!isRecording);
     }
 }

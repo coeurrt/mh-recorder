@@ -60,10 +60,14 @@ public class ObsHandler {
                     break;
                 case "StopRecord":
                     Path path = Path.of(data.get("responseData").get("outputPath").asText());
-                    pathCallback.accept(path);
+                    if (pathCallback != null) {
+                        pathCallback.accept(path);
+                    }
                     break;
                 case "GetRecordStatus":
-                    statusCallback.accept(data.get("responseData").get("outputActive").asBoolean());
+                    if (statusCallback != null) {
+                        statusCallback.accept(data.get("responseData").get("outputActive").asBoolean());
+                    }
             }
         } else System.out.println("Request failed");
     }

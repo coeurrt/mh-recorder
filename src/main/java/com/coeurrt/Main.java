@@ -1,27 +1,26 @@
 package com.coeurrt;
 
 import com.coeurrt.mhrecorder.detection.QuestStartDetection;
-import com.coeurrt.mhrecorder.obs.ObsWebSocketClient;
+import com.coeurrt.mhrecorder.obs.ObsConnectionManager;
 import com.coeurrt.mhrecorder.ui.MhRecorderApplication;
 import javafx.application.Application;
 
 import java.net.URI;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 public class Main {
 
     public static void main(String[] args) throws Exception {
         URI obsUri = new URI("ws://localhost:4455");
 
-        ObsWebSocketClient client = new ObsWebSocketClient(obsUri);
+        ObsConnectionManager obsConnectionManager = new ObsConnectionManager(obsUri);
 
-        MhRecorderApplication.setObsClient(client);
+        MhRecorderApplication.setObsConnectionManager(obsConnectionManager);
+
+        obsConnectionManager.connect();
 
         QuestStartDetection questStartDetection = new QuestStartDetection();
 
-        client.setScreenshotCallback(image -> {
+        obsConnectionManager.setScreenshotCallback(image -> {
             if (questStartDetection.detect(image)) {
                 System.out.println("QUEST STARTED");
             }
