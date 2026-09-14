@@ -27,16 +27,6 @@ public class Main {
             }
         });
 
-        ScheduledExecutorService scheduler =
-                Executors.newSingleThreadScheduledExecutor();
-
-        scheduler.scheduleAtFixedRate(
-                client::getScreenshot,
-                2000,
-                500,
-                TimeUnit.MILLISECONDS
-        );
-
         Application.launch(MhRecorderApplication.class, args);
     }
 }
