@@ -1,6 +1,5 @@
 package com.coeurrt.mhrecorder.detection;
 
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -14,52 +13,43 @@ public class QuestStartDetection {
     private final static double X_END_PERCENT = 0.58;
     private final static double Y_START_PERCENT = 0.1;
     private final static double Y_END_PERCENT = 0.32;
-    private static final double MIN_HUE = 0.47;
-    private static final double MAX_HUE = 0.53;
-    private static final double MIN_SATURATION = 0.7;
-    private static final double MIN_BRIGHTNESS = 0.7;
-    private static final double DETECTION_THRESHOLD = 0.03;
-    private static final int CONSECUTIVE_DETECTION_THRESHOLD = 5;
+    private static final ColorRange START_RANGE =
+            new ColorRange(0.47, 0.53, 0.70, 1, 0.70, 1, 0.1, 5);
+    private static final ColorRange START_HUD_RANGE =
+            new ColorRange(0.49, 0.51, 0.70, 1, 0.05, 0.40, 0.001, 5);
+    private static final ColorRange TRAVEL_RANGE =
+            new ColorRange(0, 1, 0, 1, 0, 0.05, 0.95, 5);
     private int consecutiveDetections = 0;
 
     public boolean detect(BufferedImage image) {
 
         BufferedImage roiImage = createRoiImage(image);
 
-        double cyanRatio = calculateCyanRatio(roiImage);
+        double startRatio = ColorRatioCalculator.calculateRatio(roiImage, START_RANGE);
+        double startHudRatio = ColorRatioCalculator.calculateRatio(roiImage, START_HUD_RANGE);
+        double travelRatio = ColorRatioCalculator.calculateRatio(roiImage, TRAVEL_RANGE);
 
-        log(cyanRatio);
+        log("start", startRatio);
+        log("starthud", startHudRatio);
+        log("travel", travelRatio);
 
-        if (cyanRatio > DETECTION_THRESHOLD) {
+        if ((consecutiveDetections > 0 && travelRatio > TRAVEL_RANGE.detectionThreshold()) ||
+                startRatio > START_RANGE.detectionThreshold() ||
+                startHudRatio > START_HUD_RANGE.detectionThreshold()) {
             consecutiveDetections++;
         } else {
             consecutiveDetections = 0;
         }
-        return consecutiveDetections == CONSECUTIVE_DETECTION_THRESHOLD;
+        System.out.println("consecutive=" + consecutiveDetections);
+        return consecutiveDetections == START_RANGE.consecutiveDetectionThreshold();
 
-    }
-
-    private double calculateCyanRatio(BufferedImage roiImage) {
-        int cyanPixelCounter = 0;
-
-        for (int y = 0; y < roiImage.getHeight(); y++) {
-            for (int x = 0; x < roiImage.getWidth(); x++) {
-                int rgb = roiImage.getRGB(x, y);
-                float[] hsb = Color.RGBtoHSB((rgb >> 16) & 0xFF, (rgb >> 8) & 0xFF, rgb & 0xFF, null);
-                if (hsb[0] > MIN_HUE
-                        && hsb[0] < MAX_HUE && hsb[1] > MIN_SATURATION
-                        && hsb[2] > MIN_BRIGHTNESS) cyanPixelCounter++;
-            }
-        }
-
-        return (double) cyanPixelCounter / (roiImage.getWidth() * roiImage.getHeight());
     }
 
     //TODO POC DELETE AFTER
-    private void log(double ratio) {
+    private void log(String label, double ratio) {
         Path logPath = Path.of("C:\\Users\\Mimi\\Documents\\dev\\quest-detection.log");
 
-        String logLine = LocalDateTime.now() + " | ratio=" + ratio + " | above threshold=" + (ratio > DETECTION_THRESHOLD) + System.lineSeparator();
+        String logLine = LocalDateTime.now() + " | " + label + " | ratio=" + ratio + System.lineSeparator();
         try {
             Files.writeString(logPath, logLine, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
         } catch (IOException e) {

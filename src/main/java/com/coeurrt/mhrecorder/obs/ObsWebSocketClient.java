@@ -95,7 +95,7 @@ public class ObsWebSocketClient extends WebSocketClient {
 
     private void sendRequest(ObjectNode request) {
         send(request.toString());
-        System.out.println("Client -> OBS request opcode: " + request.get("op").toString());
+        //System.out.println("Client -> OBS request opcode: " + request.get("op").toString());
     }
 
     private void stopScreenshotScheduler() {
