@@ -1,0 +1,6 @@
+DO NOT WRITE IN THIS FILES
+
+EXEMPLE:
+
+OBS_PASSWORD=areallystrongpassword
+LOG_PATH=C:\Users\xxx\Documents\MHRecorder

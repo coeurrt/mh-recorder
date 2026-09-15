@@ -1,5 +1,6 @@
 package com.coeurrt.mhrecorder.obs;
 
+import com.coeurrt.mhrecorder.AppConfig;
 import com.coeurrt.mhrecorder.video.VideoFileManager;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -35,7 +36,7 @@ public class ObsHandler {
             JsonNode authentication = data.get("authentication");
             String challenge = authentication.get("challenge").asText();
             String salt = authentication.get("salt").asText();
-            String password = System.getenv("OBS_PASSWORD");
+            String password = AppConfig.OBS_PASSWORD;
             if (password == null) {
                 throw new IllegalStateException("OBS_PASSWORD is not defined");
             }

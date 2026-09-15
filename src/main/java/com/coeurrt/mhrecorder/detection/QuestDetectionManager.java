@@ -1,6 +1,13 @@
 package com.coeurrt.mhrecorder.detection;
 
+import com.coeurrt.mhrecorder.AppConfig;
 import com.coeurrt.mhrecorder.obs.ObsConnectionManager;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.time.LocalDateTime;
 
 public class QuestDetectionManager {
 
@@ -21,14 +28,43 @@ public class QuestDetectionManager {
             if (currentState == QuestState.IDLE) {
                 if (questStartDetection.detect(image)) {
                     currentState = QuestState.IN_QUEST;
-                    System.out.println("QUEST STARTED");
+                    log("QUEST STARTED");
                 }
             } else {
                 if (questEndDetection.detect(image)) {
                     currentState = QuestState.IDLE;
-                    System.out.println("QUEST ENDED");
+                    log("QUEST ENDED");
                 }
             }
         });
+    }
+
+    public void testLog() {
+        log("TEST LOG");
+    }
+
+    //TODO POC DELETE AFTER
+    private void log(String state) {
+        Path logPath = Path.of(AppConfig.LOG_PATH)
+                .resolve("detection-log.txt");
+
+        String logLine =
+                LocalDateTime.now()
+                        + " | "
+                        + state
+                        + System.lineSeparator();
+
+        try {
+            Files.createDirectories(logPath.getParent());
+
+            Files.writeString(
+                    logPath,
+                    logLine,
+                    StandardOpenOption.CREATE,
+                    StandardOpenOption.APPEND
+            );
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
