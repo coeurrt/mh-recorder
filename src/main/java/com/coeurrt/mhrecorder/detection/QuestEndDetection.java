@@ -30,10 +30,6 @@ public class QuestEndDetection {
         double failureRatio = ColorRatioCalculator.calculateRatio(roiImage,FAILURE_RANGE);
         double abandonRatio = ColorRatioCalculator.calculateRatio(roiImage,ABANDON_RANGE);
 
-        log("successRatio",successRatio);
-        log("failureRatio",failureRatio);
-        log("abandonRatio",abandonRatio);
-
         boolean endColorDetected =
                 successRatio > SUCCESS_RANGE.detectionThreshold()
                         || failureRatio > FAILURE_RANGE.detectionThreshold()

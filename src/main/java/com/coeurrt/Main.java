@@ -1,5 +1,6 @@
 package com.coeurrt;
 
+import com.coeurrt.mhrecorder.detection.QuestDetectionManager;
 import com.coeurrt.mhrecorder.detection.QuestEndDetection;
 import com.coeurrt.mhrecorder.detection.QuestStartDetection;
 import com.coeurrt.mhrecorder.obs.ObsConnectionManager;
@@ -19,19 +20,9 @@ public class Main {
 
         obsConnectionManager.connect();
 
-        QuestStartDetection questStartDetection = new QuestStartDetection();
-        QuestEndDetection questEndDetection = new QuestEndDetection();
+        QuestDetectionManager questDetectionManager = new QuestDetectionManager(obsConnectionManager);
 
-        obsConnectionManager.setScreenshotCallback(image -> {
-
-            if (questStartDetection.detect(image)) {
-                System.out.println("QUEST STARTED");
-            }
-
-            if (questEndDetection.detect(image)) {
-                System.out.println("QUEST ENDED");
-            }
-        });
+        questDetectionManager.startDetection();
 
         Application.launch(MhRecorderApplication.class, args);
     }

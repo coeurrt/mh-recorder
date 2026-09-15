@@ -29,10 +29,6 @@ public class QuestStartDetection {
         double startHudRatio = ColorRatioCalculator.calculateRatio(roiImage, START_HUD_RANGE);
         double travelRatio = ColorRatioCalculator.calculateRatio(roiImage, TRAVEL_RANGE);
 
-        log("start", startRatio);
-        log("starthud", startHudRatio);
-        log("travel", travelRatio);
-
         if ((consecutiveDetections > 0 && travelRatio > TRAVEL_RANGE.detectionThreshold()) ||
                 startRatio > START_RANGE.detectionThreshold() ||
                 startHudRatio > START_HUD_RANGE.detectionThreshold()) {
@@ -40,7 +36,6 @@ public class QuestStartDetection {
         } else {
             consecutiveDetections = 0;
         }
-        System.out.println("consecutive=" + consecutiveDetections);
         return consecutiveDetections == START_RANGE.consecutiveDetectionThreshold();
 
     }
