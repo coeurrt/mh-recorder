@@ -20,7 +20,9 @@ public class QuestEndDetection {
             new ColorRange(0.97, 0.98, 0.7,1, 0.85,1,0.003,4);
     private static final ColorRange ABANDON_RANGE =
             new ColorRange(0.66, 0.67, 0.4, 1,0.88,1,0.002,4);
-    private int consecutiveDetections = 0;
+    private int successConsecutiveDetections = 0;
+    private int failureConsecutiveDetections = 0;
+    private int abandonConsecutiveDetections = 0;
 
     public boolean detect(BufferedImage image) {
 
@@ -30,17 +32,27 @@ public class QuestEndDetection {
         double failureRatio = ColorRatioCalculator.calculateRatio(roiImage,FAILURE_RANGE);
         double abandonRatio = ColorRatioCalculator.calculateRatio(roiImage,ABANDON_RANGE);
 
-        boolean endColorDetected =
-                successRatio > SUCCESS_RANGE.detectionThreshold()
-                        || failureRatio > FAILURE_RANGE.detectionThreshold()
-                        || abandonRatio > ABANDON_RANGE.detectionThreshold();
-
-        if (endColorDetected) {
-            consecutiveDetections++;
+        if (successRatio > SUCCESS_RANGE.detectionThreshold()) {
+            successConsecutiveDetections++;
         } else {
-            consecutiveDetections = 0;
+            successConsecutiveDetections = 0;
         }
-        return consecutiveDetections == CONSECUTIVE_DETECTION_THRESHOLD;
+
+        if (failureRatio > FAILURE_RANGE.detectionThreshold()) {
+            failureConsecutiveDetections++;
+        } else {
+            failureConsecutiveDetections = 0;
+        }
+
+        if (abandonRatio > ABANDON_RANGE.detectionThreshold()) {
+            abandonConsecutiveDetections++;
+        } else {
+            abandonConsecutiveDetections = 0;
+        }
+
+        return successConsecutiveDetections == CONSECUTIVE_DETECTION_THRESHOLD
+                || failureConsecutiveDetections == CONSECUTIVE_DETECTION_THRESHOLD
+                || abandonConsecutiveDetections == CONSECUTIVE_DETECTION_THRESHOLD;
 
     }
 
@@ -62,5 +74,15 @@ public class QuestEndDetection {
         int yStart = (int) (image.getHeight() * Y_START_PERCENT);
         int yEnd = (int) (image.getHeight() * Y_END_PERCENT);
         return image.getSubimage(xStart, yStart, xEnd - xStart, yEnd - yStart);
+    }
+
+    public String endReason(){
+        if (successConsecutiveDetections == CONSECUTIVE_DETECTION_THRESHOLD)
+            return "SUCCESS";
+        if (failureConsecutiveDetections == CONSECUTIVE_DETECTION_THRESHOLD)
+            return "FAILURE";
+        if (abandonConsecutiveDetections == CONSECUTIVE_DETECTION_THRESHOLD)
+            return "ABANDON";
+        return null;
     }
 }

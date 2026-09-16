@@ -1,2 +1,2 @@
-OBS_PASSWORD=
-LOG_PATH=
+OBS_PASSWORD=coeurrt
+LOG_PATH=C:\Users\Mimi\Documents\dev\mh-recorder

@@ -14,12 +14,16 @@ public class QuestDetectionManager {
     private final ObsConnectionManager obsConnectionManager;
     private final QuestStartDetection questStartDetection;
     private final QuestEndDetection questEndDetection;
+    private final QuestStartDetection debugQuestStartDetection;
+    private final QuestEndDetection debugQuestEndDetection;
     private QuestState currentState;
 
     public QuestDetectionManager(ObsConnectionManager obsConnectionManager) {
         this.obsConnectionManager = obsConnectionManager;
         questStartDetection = new QuestStartDetection();
         questEndDetection = new QuestEndDetection();
+        debugQuestStartDetection = new QuestStartDetection();
+        debugQuestEndDetection = new QuestEndDetection();
         currentState = QuestState.IDLE;
     }
 
@@ -30,10 +34,16 @@ public class QuestDetectionManager {
                     currentState = QuestState.IN_QUEST;
                     log("QUEST STARTED");
                 }
+                if (debugQuestEndDetection.detect(image)) {
+                    log("<!>FALSE QUEST ENDED DETECTED</!> | " + questEndDetection.detect(image));
+                }
             } else {
                 if (questEndDetection.detect(image)) {
                     currentState = QuestState.IDLE;
-                    log("QUEST ENDED");
+                    log("QUEST ENDED | " + questEndDetection.endReason());
+                }
+                if (debugQuestStartDetection.detect(image)) {
+                    log("<!>FALSE QUEST STARTED DETECTED</!>");
                 }
             }
         });
@@ -66,5 +76,13 @@ public class QuestDetectionManager {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public void hello(){
+        log("hello");
+    }
+
+    public void end(){
+        log("terminated");
     }
 }
