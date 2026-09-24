@@ -39,4 +39,4 @@ build/
 ### Mac OS ###
 .DS_Store
 
-.detection-log.txt
+detection-log.txt
