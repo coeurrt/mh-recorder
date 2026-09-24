@@ -15,7 +15,7 @@ public class QuestEndDetection {
     private final static double Y_END_PERCENT = 0.74;
     private static final int CONSECUTIVE_DETECTION_THRESHOLD = 4;
     private static final ColorRange SUCCESS_RANGE =
-            new ColorRange(0.13, 0.17, 0.5,1, 0.9,1,0.03,6);
+            new ColorRange(0.13, 0.17, 0.5,1, 0.9,1,0.01,6);
     private static final ColorRange FAILURE_RANGE =
             new ColorRange(0.97, 0.98, 0.7,1, 0.85,1,0.003,4);
     private static final ColorRange ABANDON_RANGE =

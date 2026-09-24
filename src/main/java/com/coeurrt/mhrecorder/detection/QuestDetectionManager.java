@@ -33,14 +33,16 @@ public class QuestDetectionManager {
                 if (questStartDetection.detect(image)) {
                     currentState = QuestState.IN_QUEST;
                     log("QUEST STARTED");
+                    obsConnectionManager.startRecording();
                 }
                 if (debugQuestEndDetection.detect(image)) {
-                    log("<!>FALSE QUEST ENDED DETECTED</!> | " + questEndDetection.detect(image));
+                    log("<!>FALSE QUEST ENDED DETECTED</!> | " + questEndDetection.endReason());
                 }
             } else {
                 if (questEndDetection.detect(image)) {
                     currentState = QuestState.IDLE;
                     log("QUEST ENDED | " + questEndDetection.endReason());
+                    obsConnectionManager.stopRecording();
                 }
                 if (debugQuestStartDetection.detect(image)) {
                     log("<!>FALSE QUEST STARTED DETECTED</!>");
