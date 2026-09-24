@@ -19,6 +19,7 @@ public class Main {
 
         AppConfig.OBS_PASSWORD = config.get("OBS_PASSWORD");
         AppConfig.LOG_PATH = config.get("LOG_PATH");
+        AppConfig.VIDEO_PATH = config.get("VIDEO_PATH");
 
         URI obsUri = new URI("ws://localhost:4455");
 

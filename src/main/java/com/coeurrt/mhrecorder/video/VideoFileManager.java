@@ -1,5 +1,7 @@
 package com.coeurrt.mhrecorder.video;
 
+import com.coeurrt.mhrecorder.AppConfig;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -8,10 +10,8 @@ import java.time.format.DateTimeFormatter;
 
 public class VideoFileManager {
 
-    private static final String PARENT_DIR = "MHRecorder";
-
     public Path moveToRecorderFolder(Path sourcePath) {
-        Path destinationPath = sourcePath.getParent().resolve(PARENT_DIR);
+        Path destinationPath = Path.of(AppConfig.VIDEO_PATH);
 
         try {
             Files.createDirectories(destinationPath);
